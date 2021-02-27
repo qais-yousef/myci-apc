@@ -1,0 +1,76 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<flow-definition plugin="workflow-job@2.40">
+  <actions>
+    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobAction plugin="pipeline-model-definition@1.8.4"/>
+    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction plugin="pipeline-model-definition@1.8.4">
+      <jobProperties/>
+      <triggers/>
+      <parameters/>
+      <options/>
+    </org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction>
+  </actions>
+  <description>Run Hackbench repeatedly and collect current values from sysfs.</description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.model.StringParameterDefinition>
+          <name>NODE</name>
+          <description></description>
+          <defaultValue></defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+  </properties>
+  <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@2.87">
+    <script>pipeline {
+    agent { label params.NODE }
+
+    stages {
+        stage(&apos;Connect&apos;) {
+            steps {
+                sh &quot;&quot;&quot;
+                adb connect ${env.IPADDRESS}:${env.PORT}
+                &quot;&quot;&quot;
+            }
+        }
+        stage(&apos;Hackbench&apos;) {
+            steps {
+                sh &apos;&apos;&apos;
+                adb shell &quot;&quot;&quot;
+                cd /sdcard
+                for i in \\$(seq 10)
+                do
+                    battery_stats.sh hackbench_battery_\\$i.txt &amp;
+                    pid=\\$!
+                    hackbench -l 10000
+                    kill -9 \\$pid
+                    sleep 5
+                done
+                &quot;&quot;&quot;
+                
+                for i in $(seq 10)
+                do
+                    adb pull /sdcard/hackbench_battery_$i.txt .
+                    adb shell &quot;rm /sdcard/hackbench_battery_$i.txt&quot;
+                    gnuplot -e &quot;set terminal png size 800,600; set output \\&quot;hackbench_battery_$i.png\\&quot;; plot \\&quot;hackbench_battery_$i.txt\\&quot;&quot;
+                done
+                &apos;&apos;&apos;
+            }
+        }
+        stage(&apos;Archive&apos;) {
+            steps {
+                archiveArtifacts artifacts: &apos;hackbench_battery_*.txt&apos;, followSymlinks: false
+                archiveArtifacts artifacts: &apos;hackbench_battery_*.png&apos;, followSymlinks: false
+
+            }
+        }
+    }
+}
+</script>
+    <sandbox>true</sandbox>
+  </definition>
+  <triggers/>
+  <disabled>false</disabled>
+</flow-definition>
