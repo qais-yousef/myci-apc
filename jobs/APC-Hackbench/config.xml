@@ -49,12 +49,21 @@
                     sleep 5
                 done
                 &quot;&quot;&quot;
-                
+                rm -f sum.txt
                 for i in $(seq 10)
                 do
                     adb pull /sdcard/hackbench_battery_$i.txt .
                     adb shell &quot;rm /sdcard/hackbench_battery_$i.txt&quot;
                     gnuplot -e &quot;set terminal png size 800,600; set output \\&quot;hackbench_battery_$i.png\\&quot;; plot \\&quot;hackbench_battery_$i.txt\\&quot;&quot;
+                    sum=0
+                    count=0
+                    for line in $(cat hackbench_battery_$i.txt)
+                    do
+                        sum=$(expr $sum + $line)
+                        count=$(expr $count + 1)
+                    done
+                    avg=$(expr $sum / $count)
+                    echo &quot;#$i sum: $sum avg: $avg&quot; &gt;&gt; sum.txt
                 done
                 &apos;&apos;&apos;
             }
@@ -63,7 +72,7 @@
             steps {
                 archiveArtifacts artifacts: &apos;hackbench_battery_*.txt&apos;, followSymlinks: false
                 archiveArtifacts artifacts: &apos;hackbench_battery_*.png&apos;, followSymlinks: false
-
+                archiveArtifacts artifacts: &apos;sum.txt&apos;, followSymlinks: false
             }
         }
     }
