@@ -1,0 +1,87 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<flow-definition plugin="workflow-job@2.40">
+  <actions>
+    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobAction plugin="pipeline-model-definition@1.8.4"/>
+    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction plugin="pipeline-model-definition@1.8.4">
+      <jobProperties/>
+      <triggers/>
+      <parameters/>
+      <options/>
+    </org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction>
+  </actions>
+  <description>Collect current values from sysfs for a specified period of time.</description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.model.StringParameterDefinition>
+          <name>NODE</name>
+          <description></description>
+          <defaultValue></defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>TIME</name>
+          <description>Time in seconds to monitor the battery for.</description>
+          <defaultValue>60</defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+  </properties>
+  <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@2.87">
+    <script>pipeline {
+    agent { label params.NODE }
+
+    stages {
+        stage(&apos;Connect&apos;) {
+            steps {
+                sh &quot;&quot;&quot;
+                adb connect ${env.IPADDRESS}:${env.PORT}
+                &quot;&quot;&quot;
+            }
+        }
+        stage(&apos;Monitor Battery&apos;) {
+            steps {
+                sh &apos;&apos;&apos;
+                adb shell &quot;echo temp &gt; /sys/power/wake_lock&quot;
+                adb shell &quot;&quot;&quot;
+                    cd /sdcard
+                    battery_stats.sh battery_monitor.txt &amp;
+                    pid=\\$!
+                    sleep ${TIME}
+                    kill -9 \\$pid
+                &quot;&quot;&quot;
+                adb shell &quot;echo temp &gt; /sys/power/wake_unlock&quot;
+
+                rm -f sum.txt
+                adb pull /sdcard/battery_monitor.txt .
+                adb shell &quot;rm /sdcard/battery_monitor.txt&quot;
+                gnuplot -e &quot;set terminal png size 800,600; set output \\&quot;battery_monitor.png\\&quot;; plot \\&quot;battery_monitor.txt\\&quot;&quot;
+                sum=0
+                count=0
+                for line in $(cat battery_monitor.txt)
+                do
+                    sum=$(expr $sum + $line)
+                    count=$(expr $count + 1)
+                done
+                avg=$(expr $sum / $count)
+                echo &quot;#$i sum: $sum avg: $avg&quot; &gt;&gt; sum.txt
+                &apos;&apos;&apos;
+            }
+        }
+        stage(&apos;Archive&apos;) {
+            steps {
+                archiveArtifacts artifacts: &apos;battery_monitor.txt&apos;, followSymlinks: false
+                archiveArtifacts artifacts: &apos;battery_monitor.png&apos;, followSymlinks: false
+                archiveArtifacts artifacts: &apos;sum.txt&apos;, followSymlinks: false
+            }
+        }
+    }
+}
+</script>
+    <sandbox>true</sandbox>
+  </definition>
+  <triggers/>
+  <disabled>false</disabled>
+</flow-definition>
