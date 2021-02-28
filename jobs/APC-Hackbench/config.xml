@@ -38,6 +38,7 @@
         stage(&apos;Hackbench&apos;) {
             steps {
                 sh &apos;&apos;&apos;
+                adb shell &quot;echo temp &gt; /sys/power/wake_lock&quot;
                 adb shell &quot;&quot;&quot;
                 cd /sdcard
                 for i in \\$(seq 10)
@@ -46,9 +47,11 @@
                     pid=\\$!
                     hackbench -l 10000
                     kill -9 \\$pid
-                    sleep 5
+                    sleep 10
                 done
                 &quot;&quot;&quot;
+                adb shell &quot;echo temp &gt; /sys/power/wake_unlock&quot;
+
                 rm -f sum.txt
                 for i in $(seq 10)
                 do
