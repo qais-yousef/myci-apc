@@ -47,7 +47,7 @@
                 adb shell &quot;echo temp &gt; /sys/power/wake_lock&quot;
                 adb shell &quot;&quot;&quot;
                     cd /sdcard
-                    battery_stats.sh battery_monitor.txt &amp;
+                    battery_stats.sh battery_monitor.csv &amp;
                     pid=\\$!
                     sleep ${TIME}
                     kill -9 \\$pid
@@ -55,26 +55,34 @@
                 adb shell &quot;echo temp &gt; /sys/power/wake_unlock&quot;
 
                 rm -f sum.txt
-                adb pull /sdcard/battery_monitor.txt .
-                adb shell &quot;rm /sdcard/battery_monitor.txt&quot;
-                gnuplot -e &quot;set terminal png size 800,600; set output \\&quot;battery_monitor.png\\&quot;; plot \\&quot;battery_monitor.txt\\&quot;&quot;
-                sum=0
-                count=0
-                for line in $(cat battery_monitor.txt)
-                do
-                    sum=$(expr $sum + $line)
-                    count=$(expr $count + 1)
-                done
-                avg=$(expr $sum / $count)
-                echo &quot;#$i sum: $sum avg: $avg&quot; &gt;&gt; sum.txt
+                adb pull /sdcard/battery_monitor.csv .
+                adb shell &quot;rm /sdcard/battery_monitor.csv&quot;
+                python -c &quot;&quot;&quot;
+import pandas as pd
+import matplotlib.pyplot as plt
+
+data = pd.read_csv(&apos;battery_monitor.csv&apos;)
+df = pd.DataFrame(data)
+
+df = df/1000
+print(df.current.describe(percentiles=[0.9,0.95,0.99]))
+
+ax = df.current.plot()
+
+ax.set_title(&apos;Idle Current on Pixel 4&apos;)
+ax.set_ylabel(&apos;Current mA&apos;)
+ax.set_xlabel(&apos;Count&apos;)
+
+plt.savefig(&apos;battery_monitor.png&apos;)
+                &quot;&quot;&quot; &gt; summary.txt
                 &apos;&apos;&apos;
             }
         }
         stage(&apos;Archive&apos;) {
             steps {
-                archiveArtifacts artifacts: &apos;battery_monitor.txt&apos;, followSymlinks: false
+                archiveArtifacts artifacts: &apos;battery_monitor.csv&apos;, followSymlinks: false
                 archiveArtifacts artifacts: &apos;battery_monitor.png&apos;, followSymlinks: false
-                archiveArtifacts artifacts: &apos;sum.txt&apos;, followSymlinks: false
+                archiveArtifacts artifacts: &apos;summary.txt&apos;, followSymlinks: false
             }
         }
     }
