@@ -20,10 +20,28 @@
           <defaultValue></defaultValue>
           <trim>false</trim>
         </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>ITERATIONS</name>
+          <description>Number of hackbench iterations to run</description>
+          <defaultValue>10</defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>DELAY</name>
+          <description>Time in seconds to wait between each hackbench run</description>
+          <defaultValue>10</defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>LOOPS</name>
+          <description>Number of loops to perform in each hackbench run</description>
+          <defaultValue>10000</defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
       </parameterDefinitions>
     </hudson.model.ParametersDefinitionProperty>
   </properties>
-  <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@2.87">
+  <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@2.90">
     <script>pipeline {
     agent { label params.NODE }
 
@@ -33,6 +51,7 @@
                 sh &quot;&quot;&quot;
                 adb connect ${env.IPADDRESS}:${env.PORT}
                 &quot;&quot;&quot;
+                cleanWs()
             }
         }
         stage(&apos;Hackbench&apos;) {
@@ -41,41 +60,49 @@
                 adb shell &quot;echo temp &gt; /sys/power/wake_lock&quot;
                 adb shell &quot;&quot;&quot;
                 cd /sdcard
-                for i in \\$(seq 10)
+                for i in \\$(seq ${ITERATIONS})
                 do
-                    battery_stats.sh hackbench_battery_\\$i.txt &amp;
+                    battery_stats.sh hackbench_battery_\\$i.csv &amp;
                     pid=\\$!
-                    hackbench -l 10000
+                    hackbench -l ${LOOPS}
                     kill -9 \\$pid
-                    sleep 10
+                    sleep ${DELAY}
                 done
                 &quot;&quot;&quot;
                 adb shell &quot;echo temp &gt; /sys/power/wake_unlock&quot;
 
-                rm -f sum.txt
-                for i in $(seq 10)
+                for i in $(seq ${ITERATIONS})
                 do
-                    adb pull /sdcard/hackbench_battery_$i.txt .
-                    adb shell &quot;rm /sdcard/hackbench_battery_$i.txt&quot;
-                    gnuplot -e &quot;set terminal png size 800,600; set output \\&quot;hackbench_battery_$i.png\\&quot;; plot \\&quot;hackbench_battery_$i.txt\\&quot;&quot;
-                    sum=0
-                    count=0
-                    for line in $(cat hackbench_battery_$i.txt)
-                    do
-                        sum=$(expr $sum + $line)
-                        count=$(expr $count + 1)
-                    done
-                    avg=$(expr $sum / $count)
-                    echo &quot;#$i sum: $sum avg: $avg&quot; &gt;&gt; sum.txt
+
+                adb pull /sdcard/hackbench_battery_$i.csv .
+                adb shell &quot;rm /sdcard/hackbench_battery_$i.csv&quot;
+                python -c &quot;&quot;&quot;
+import pandas as pd
+import matplotlib.pyplot as plt
+
+data = pd.read_csv(\\&quot;hackbench_battery_$i.csv\\&quot;)
+df = pd.DataFrame(data)
+
+df = df/1000
+print(df.current.describe(percentiles=[0.9,0.95,0.99]))
+
+ax = df.current.plot()
+
+ax.set_title(&apos;Idle Current on Pixel 4&apos;)
+ax.set_ylabel(&apos;Current mA&apos;)
+ax.set_xlabel(&apos;Count&apos;)
+
+plt.savefig(\\&quot;hackbench_battery_$i.png\\&quot;)
+                &quot;&quot;&quot; &gt;&gt; summary.txt
                 done
                 &apos;&apos;&apos;
             }
         }
         stage(&apos;Archive&apos;) {
             steps {
-                archiveArtifacts artifacts: &apos;hackbench_battery_*.txt&apos;, followSymlinks: false
+                archiveArtifacts artifacts: &apos;hackbench_battery_*.csv&apos;, followSymlinks: false
                 archiveArtifacts artifacts: &apos;hackbench_battery_*.png&apos;, followSymlinks: false
-                archiveArtifacts artifacts: &apos;sum.txt&apos;, followSymlinks: false
+                archiveArtifacts artifacts: &apos;summary.txt&apos;, followSymlinks: false
             }
         }
     }
