@@ -50,50 +50,44 @@
             steps {
                 sh &quot;&quot;&quot;
                 adb connect ${env.IPADDRESS}:${env.PORT}
+                adb shell &apos;echo temp &gt; /sys/power/wake_lock&apos;
                 &quot;&quot;&quot;
-                cleanWs()
+            }
+        }
+        stage(&apos;Copy Tools&apos;) {
+            steps {
+                node(&apos;master&apos;) {
+                    cleanWs()
+                    sh &apos;cp ../../../tools/* .&apos;
+                    sh &apos;ls&apos;
+                    sh &apos;pwd&apos;
+                    stash includes: &apos;*&apos;, name: &apos;tools&apos;
+                }
+                unstash &apos;tools&apos;
+                sh &apos;&apos;&apos;
+                adb shell &quot;mkdir -p /data/myci-apc/&quot;
+                adb push battery_stats.sh /data/myci-apc/
+                &apos;&apos;&apos;
             }
         }
         stage(&apos;Hackbench&apos;) {
             steps {
                 sh &apos;&apos;&apos;
-                adb shell &quot;echo temp &gt; /sys/power/wake_lock&quot;
                 adb shell &quot;&quot;&quot;
-                cd /sdcard
+                cd /data/myci-apc/
                 for i in \\$(seq ${ITERATIONS})
                 do
-                    battery_stats.sh hackbench_battery_\\$i.csv &amp;
+                    ./battery_stats.sh hackbench_battery_\\$i.csv &amp;
                     pid=\\$!
                     hackbench -l ${LOOPS}
                     kill -9 \\$pid
                     sleep ${DELAY}
                 done
                 &quot;&quot;&quot;
-                adb shell &quot;echo temp &gt; /sys/power/wake_unlock&quot;
-
                 for i in $(seq ${ITERATIONS})
                 do
-
-                adb pull /sdcard/hackbench_battery_$i.csv .
-                adb shell &quot;rm /sdcard/hackbench_battery_$i.csv&quot;
-                python -c &quot;&quot;&quot;
-import pandas as pd
-import matplotlib.pyplot as plt
-
-data = pd.read_csv(\\&quot;hackbench_battery_$i.csv\\&quot;)
-df = pd.DataFrame(data)
-
-df = df/1000
-print(df.current.describe(percentiles=[0.9,0.95,0.99]))
-
-ax = df.current.plot()
-
-ax.set_title(&apos;Idle Current on Pixel 4&apos;)
-ax.set_ylabel(&apos;Current mA&apos;)
-ax.set_xlabel(&apos;Count&apos;)
-
-plt.savefig(\\&quot;hackbench_battery_$i.png\\&quot;)
-                &quot;&quot;&quot; &gt;&gt; summary.txt
+                    adb pull /data/myci-apc/hackbench_battery_$i.csv .
+                    ./plot.py hackbench_battery_$i.csv &gt;&gt; summary.txt
                 done
                 &apos;&apos;&apos;
             }
@@ -104,6 +98,15 @@ plt.savefig(\\&quot;hackbench_battery_$i.png\\&quot;)
                 archiveArtifacts artifacts: &apos;hackbench_battery_*.png&apos;, followSymlinks: false
                 archiveArtifacts artifacts: &apos;summary.txt&apos;, followSymlinks: false
             }
+        }
+    }
+    post {
+        always {
+            cleanWs()
+            sh &apos;&apos;&apos;
+            adb shell &quot;echo temp &gt; /sys/power/wake_unlock&quot;
+            adb shell &quot;rm -rf /data/myci-apc/&quot;
+            &apos;&apos;&apos;
         }
     }
 }
