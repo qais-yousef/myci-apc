@@ -69,14 +69,14 @@
                     kill -9 \\$pid
                 &quot;&quot;&quot;
                 adb pull /data/myci-apc/battery_monitor.csv .
-                ./plot.py battery_monitor.csv &gt; summary.txt
+                ./plot.py ${NODE}_idle &gt; summary.txt
                 &apos;&apos;&apos;
             }
         }
         stage(&apos;Archive&apos;) {
             steps {
-                archiveArtifacts artifacts: &apos;battery_monitor.csv&apos;, followSymlinks: false
-                archiveArtifacts artifacts: &apos;battery_monitor.png&apos;, followSymlinks: false
+                archiveArtifacts artifacts: &apos;*.csv&apos;, followSymlinks: false
+                archiveArtifacts artifacts: &apos;*.png&apos;, followSymlinks: false
                 archiveArtifacts artifacts: &apos;summary.txt&apos;, followSymlinks: false
             }
         }

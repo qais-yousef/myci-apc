@@ -87,15 +87,15 @@
                 for i in $(seq ${ITERATIONS})
                 do
                     adb pull /data/myci-apc/hackbench_battery_$i.csv .
-                    ./plot.py hackbench_battery_$i.csv &gt;&gt; summary.txt
                 done
+                ./plot.py ${NODE}_hackbench &gt; summary.txt
                 &apos;&apos;&apos;
             }
         }
         stage(&apos;Archive&apos;) {
             steps {
-                archiveArtifacts artifacts: &apos;hackbench_battery_*.csv&apos;, followSymlinks: false
-                archiveArtifacts artifacts: &apos;hackbench_battery_*.png&apos;, followSymlinks: false
+                archiveArtifacts artifacts: &apos;*.csv&apos;, followSymlinks: false
+                archiveArtifacts artifacts: &apos;*.png&apos;, followSymlinks: false
                 archiveArtifacts artifacts: &apos;summary.txt&apos;, followSymlinks: false
             }
         }

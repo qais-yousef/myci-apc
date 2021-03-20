@@ -1,12 +1,23 @@
 #!/usr/bin/env python
 import pandas as pd
 import matplotlib.pyplot as plt
+import glob
 import sys
 import os
 
-csv_file = sys.argv[1]
+name = sys.argv[1]
 
-df = pd.read_csv(csv_file)
+files = glob.glob("*.csv")
+
+df_big = []
+for file in files:
+    df = pd.read_csv(file, index_col=None, header=0)
+    df_big.append(df)
+
+df = pd.concat(df_big, axis=0, ignore_index=True)
+
+df.set_index('timestamp', inplace=True)
+df.sort_index(inplace=True)
 
 df = df/1000
 
@@ -18,5 +29,5 @@ ax.set_title('Idle Current on Pixel 4')
 ax.set_ylabel('Current mA')
 ax.set_xlabel('Count')
 
-png_file = os.path.splitext(csv_file)[0] + '.png'
+png_file = name + '.png'
 plt.savefig(png_file)
