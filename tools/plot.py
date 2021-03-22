@@ -25,7 +25,7 @@ print(df.current.describe(percentiles=[0.9,0.95,0.99]))
 
 ax = df.current.plot()
 
-ax.set_title('Idle Current on Pixel 4')
+ax.set_title(name)
 ax.set_ylabel('Current mA')
 ax.set_xlabel('Count')
 
