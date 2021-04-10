@@ -26,7 +26,10 @@ pipeline {
 						sleep ${DELAY}
 					done
 				''')
-				dev_pull("/data/myci-apc/hackbench_battery_*.csv", ".")
+
+				for (int i = 1; i <= ${ITERATIONS}; i++)
+					dev_pull("/data/myci-apc/hackbench_battery_${i}.csv", ".")
+
 				sh './tools/plot.py ${NODE}_hackbench > summary.txt'
 			}
 		}
