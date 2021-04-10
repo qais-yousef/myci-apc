@@ -2,13 +2,13 @@ config:
     augmentations:
     - energy_measurement
     iterations: ITERATIONS
-    device: DEVICE
+    device: generic_android
     device_config:
         adb_server: null
         big_core: null
         core_clusters: null
         core_names: null
-        device: null
+        device: DEVICE
         disable_selinux: true
         executables_directory: null
         load_default_modules: true
