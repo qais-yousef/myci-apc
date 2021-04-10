@@ -4,6 +4,7 @@ pipeline {
 	stages {
 		stage('Connect') {
 			steps {
+				sh 'ls'
 				verify_android()
 				connect()
 			}
