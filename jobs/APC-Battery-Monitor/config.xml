@@ -29,70 +29,25 @@
       </parameterDefinitions>
     </hudson.model.ParametersDefinitionProperty>
   </properties>
-  <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@2.90">
-    <script>pipeline {
-    agent { label params.NODE }
-
-    stages {
-        stage(&apos;Connect&apos;) {
-            steps {
-                sh &quot;&quot;&quot;
-                adb connect ${env.IPADDRESS}:${env.PORT}
-                adb shell &apos;echo temp &gt; /sys/power/wake_lock&apos;
-                &quot;&quot;&quot;
-            }
-        }
-        stage(&apos;Copy Tools&apos;) {
-            steps {
-                node(&apos;master&apos;) {
-                    cleanWs()
-                    sh &apos;cp ../../../tools/* .&apos;
-                    sh &apos;ls&apos;
-                    sh &apos;pwd&apos;
-                    stash includes: &apos;*&apos;, name: &apos;tools&apos;
-                }
-                unstash &apos;tools&apos;
-                sh &apos;&apos;&apos;
-                adb shell &quot;mkdir -p /data/myci-apc/&quot;
-                adb push battery_stats.sh /data/myci-apc/
-                &apos;&apos;&apos;
-            }
-        }
-        stage(&apos;Monitor Battery&apos;) {
-            steps {
-                sh &apos;&apos;&apos;
-                adb shell &quot;&quot;&quot;
-                    cd /data/myci-apc/
-                    ./battery_stats.sh battery_monitor.csv &amp;
-                    pid=\\$!
-                    sleep ${TIME}
-                    kill -9 \\$pid
-                &quot;&quot;&quot;
-                adb pull /data/myci-apc/battery_monitor.csv .
-                ./plot.py ${NODE}_idle &gt; summary.txt
-                &apos;&apos;&apos;
-            }
-        }
-        stage(&apos;Archive&apos;) {
-            steps {
-                archiveArtifacts artifacts: &apos;*.csv&apos;, followSymlinks: false
-                archiveArtifacts artifacts: &apos;*.png&apos;, followSymlinks: false
-                archiveArtifacts artifacts: &apos;summary.txt&apos;, followSymlinks: false
-            }
-        }
-    }
-    post {
-        always {
-            cleanWs()
-            sh &apos;&apos;&apos;
-            adb shell &quot;echo temp &gt; /sys/power/wake_unlock&quot;
-            adb shell &quot;rm -rf /data/myci-apc/&quot;
-            &apos;&apos;&apos;
-        }
-    }
-}
-</script>
-    <sandbox>true</sandbox>
+  <definition class="org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition" plugin="workflow-cps@2.90">
+    <scm class="hudson.plugins.git.GitSCM" plugin="git@4.7.1">
+      <configVersion>2</configVersion>
+      <userRemoteConfigs>
+        <hudson.plugins.git.UserRemoteConfig>
+          <url>https://github.com/qais-yousef/myci-apc</url>
+        </hudson.plugins.git.UserRemoteConfig>
+      </userRemoteConfigs>
+      <branches>
+        <hudson.plugins.git.BranchSpec>
+          <name>*/main</name>
+        </hudson.plugins.git.BranchSpec>
+      </branches>
+      <doGenerateSubmoduleConfigurations>false</doGenerateSubmoduleConfigurations>
+      <submoduleCfg class="empty-list"/>
+      <extensions/>
+    </scm>
+    <scriptPath>APC-Battery-Monitor.jenkinsfile</scriptPath>
+    <lightweight>true</lightweight>
   </definition>
   <triggers/>
   <disabled>false</disabled>
