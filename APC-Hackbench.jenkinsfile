@@ -28,10 +28,8 @@ pipeline {
 				''')
 
 				script {
-					for (int i = 1; i <= env.ITERATIONS; i++) {
-						sh "echo ${i}"
-						println(i <= env.ITERATIONS)
-					}
+					for (int i = 1; i <= env.ITERATIONS; i++)
+						dev_pull("/data/myci-apc/hackbench_battery_${i}.csv", ".")
 				}
 
 				sh './tools/plot.py ${NODE}_hackbench > summary.txt'
