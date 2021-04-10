@@ -23,7 +23,7 @@ pipeline {
 					sleep ${TIME}
 					kill -9 \\$pid
 				"""
-				adbi -s ${IPADDRESS}:${PORT} pull /data/myci-apc/battery_monitor.csv .
+				adb -s ${IPADDRESS}:${PORT} pull /data/myci-apc/battery_monitor.csv .
 				./tools/plot.py ${NODE}_idle > summary.txt
 				'''
 			}
