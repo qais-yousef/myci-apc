@@ -28,7 +28,7 @@ pipeline {
 				''')
 
 				script {
-					for (int i = 1; i <= ${ITERATIONS}; i++)
+					for (int i = 1; i <= env.ITERATIONS; i++)
 						dev_pull("/data/myci-apc/hackbench_battery_${i}.csv", ".")
 				}
 
