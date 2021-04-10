@@ -18,6 +18,7 @@ pipeline {
 				fixup_agenda("agendas/hackbench.yaml", "ITERATIONS", env.ITERATIONS)
 				fixup_agenda("agendas/hackbench.yaml", "DELAY", env.DELAY)
 				fixup_agenda("agendas/hackbench.yaml", "LOOPS", env.LOOPS)
+				fixup_agenda("agendas/hackbench.yaml", "DEVICE", env.IPADDRESS+":"+env.PORT)
 				run_wa("agendas/hackbench.yaml")
 				tar_wa_output()
 				plot_wa_power()
