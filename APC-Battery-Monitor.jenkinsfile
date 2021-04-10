@@ -18,9 +18,9 @@ pipeline {
 				dev_shell("""
 					cd /data/myci-apc/
 					./battery_stats.sh battery_monitor.csv &
-					pid=\\$!
+					pid=$!
 					sleep ${TIME}
-					kill -9 \\$pid
+					kill -9 $pid
 				""")
 				dev_pull("/data/myci-apc/battery_monitor.csv", ".")
 				sh './tools/plot.py ${NODE}_idle > summary.txt'
