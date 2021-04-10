@@ -8,16 +8,28 @@ pipeline {
 				connect()
 			}
 		}
-		stage('Hackbench-WA') {
+		stage('Prepare Agenda') {
 			steps {
 				fixup_agenda("agendas/hackbench.yaml", "ITERATIONS", env.ITERATIONS)
 				fixup_agenda("agendas/hackbench.yaml", "DELAY", env.DELAY)
 				fixup_agenda("agendas/hackbench.yaml", "LOOPS", env.LOOPS)
 				fixup_agenda("agendas/hackbench.yaml", "DEVICE", env.IPADDRESS+":"+env.PORT)
+			}
+		}
+		stage('Hackbench-WA') {
+			steps {
 				run_wa("agendas/hackbench.yaml")
-				tar_wa_output()
+			}
+		}
+		stage('Generate Plots') {
+			steps {
 				plot_wa_power()
 				plot_wa_results()
+			}
+		}
+		stage('tar wa_output') {
+			steps {
+				tar_wa_output()
 			}
 		}
 		stage('Archive') {
