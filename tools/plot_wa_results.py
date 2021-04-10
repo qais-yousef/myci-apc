@@ -18,3 +18,12 @@ for metric in metrics:
 
 plt.legend(bbox_to_anchor=(1.05, 1), loc="upper left")
 plt.savefig("{}_{}_results.png".format(target, workload), bbox_inches="tight")
+
+for metric in metrics:
+    df_metric = df[df.metric == metric]
+    plt.figure()
+    plt.plot(df_metric.iteration, df_metric.value, label=metric)
+    plt.legend()
+    plt.ylabel(df_metric.units.unique())
+    plt.xlabel("Iteration")
+    plt.savefig("{}_{}_{}.png".format(target, workload, metric))

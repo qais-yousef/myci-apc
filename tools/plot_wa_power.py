@@ -27,3 +27,19 @@ df.battery_power.plot(label="p", legend=True)
 plt.savefig("{}_{}_power.png".format(target, workload))
 
 print(df.describe())
+
+plt.figure()
+df.battery_percent.plot(label="%", legend=True)
+plt.savefig("{}_{}_battery_charge.png".format(target, workload))
+
+plt.figure()
+df.battery_current.plot(label="c", legend=True)
+plt.savefig("{}_{}_current.png".format(target, workload))
+
+plt.figure()
+df.battery_voltage.plot(label="v", legend=True)
+plt.savefig("{}_{}_voltage.png".format(target, workload))
+
+plt.figure()
+df.battery_power.plot(label="p", legend=True)
+plt.savefig("{}_{}_power_consumption.png".format(target, workload))
