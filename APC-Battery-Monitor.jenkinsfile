@@ -1,0 +1,56 @@
+pipeline {
+	agent { label params.NODE }
+
+	stages {
+		stage('Connect') {
+			steps {
+				verify_android()
+				connect()
+			}
+		}
+		stage('Copy Tools') {
+			steps {
+				node('master') {
+					cleanWs()
+					sh 'cp ../../../tools/* .'
+					sh 'ls'
+					sh 'pwd'
+					stash includes: '*', name: 'tools'
+				}
+				unstash 'tools'
+				sh '''
+				adb shell "mkdir -p /data/myci-apc/"
+				adb push battery_stats.sh /data/myci-apc/
+				'''
+			}
+		}
+		stage('Monitor Battery') {
+			steps {
+				sh '''
+				adb shell """
+					cd /data/myci-apc/
+					./battery_stats.sh battery_monitor.csv &
+					pid=\\$!
+					sleep ${TIME}
+					kill -9 \\$pid
+				"""
+				adb pull /data/myci-apc/battery_monitor.csv .
+				./plot.py ${NODE}_idle > summary.txt
+				'''
+			}
+		}
+		stage('Archive') {
+			steps {
+				archiveArtifacts artifacts: '*.csv', followSymlinks: false
+				archiveArtifacts artifacts: '*.png', followSymlinks: false
+				archiveArtifacts artifacts: 'summary.txt', followSymlinks: false
+			}
+		}
+	}
+	post {
+		always {
+			cleanWs()
+			disconnect()
+		}
+	}
+}
