@@ -8,7 +8,7 @@ def call() {
 	}
 	unstash 'tools'
 	sh '''
-	adb shell "mkdir -p /data/myci-apc/"
-	adb push battery_stats.sh /data/myci-apc/
+	adb -s ${IPADDRESS}:${PORT} shell "mkdir -p /data/myci-apc/"
+	adb -s ${IPADDRESS}:${PORT} push battery_stats.sh /data/myci-apc/
 	'''
 }

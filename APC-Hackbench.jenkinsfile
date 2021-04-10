@@ -16,7 +16,7 @@ pipeline {
 		stage('Hackbench') {
 			steps {
 				sh '''
-				adb shell """
+				adb -s ${IPADDRESS}:${PORT} shell """
 				cd /data/myci-apc/
 				for i in \\$(seq ${ITERATIONS})
 				do
@@ -29,7 +29,7 @@ pipeline {
 				"""
 				for i in $(seq ${ITERATIONS})
 				do
-					adb pull /data/myci-apc/hackbench_battery_$i.csv .
+					adb -s ${IPADDRESS}:${PORT} pull /data/myci-apc/hackbench_battery_$i.csv .
 				done
 				./plot.py ${NODE}_hackbench > summary.txt
 				'''
