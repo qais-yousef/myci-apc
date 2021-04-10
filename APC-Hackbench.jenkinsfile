@@ -3,15 +3,11 @@ pipeline {
 
 	stages {
 		stage('Connect') {
-			steps {
-				verify_android()
-				connect()
-			}
+			verify_android()
+			connect()
 		}
 		stage('Copy Tools') {
-			steps {
-				copy_tools()
-			}
+			copy_tools()
 		}
 		stage('Hackbench') {
 			steps {
@@ -36,11 +32,9 @@ pipeline {
 			}
 		}
 		stage('Archive') {
-			steps {
-				archiveArtifacts artifacts: '*.csv', followSymlinks: false
-				archiveArtifacts artifacts: '*.png', followSymlinks: false
-				archiveArtifacts artifacts: 'summary.txt', followSymlinks: false
-			}
+			archiveArtifacts artifacts: '*.csv', followSymlinks: false
+			archiveArtifacts artifacts: '*.png', followSymlinks: false
+			archiveArtifacts artifacts: 'summary.txt', followSymlinks: false
 		}
 	}
 	post {
