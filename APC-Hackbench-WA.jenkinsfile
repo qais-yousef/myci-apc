@@ -8,12 +8,7 @@ pipeline {
 				connect()
 			}
 		}
-		stage('Copy Tools') {
-			steps {
-				copy_tools()
-			}
-		}
-		stage('Hackbench') {
+		stage('Hackbench-WA') {
 			steps {
 				fixup_agenda("agendas/hackbench.yaml", "ITERATIONS", env.ITERATIONS)
 				fixup_agenda("agendas/hackbench.yaml", "DELAY", env.DELAY)
