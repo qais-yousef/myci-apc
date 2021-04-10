@@ -1,0 +1,28 @@
+#!/usr/bin/env python
+import pandas as pd
+import matplotlib.pyplot as plt
+import glob
+import sys
+
+workload = sys.argv[1]
+
+files = glob.glob("wa_output/*{}*/*.csv".format(workload))
+
+df_big = []
+for file in files:
+    df = pd.read_csv(file, index_col=None, header=0)
+    df_big.append(df)
+
+df = pd.concat(df_big, axis=0, ignore_index=True)
+
+df.set_index("timestamp_time", inplace=True)
+df.sort_index(inplace=True)
+
+df.battery_current.plot(label="c", legend=True)
+df.battery_percent.plot(label="%", legend=True)
+df.battery_voltage.plot(label="v", legend=True)
+df.battery_power.plot(label="p", legend=True)
+
+plt.savefig("{}.png".format(workload))
+
+print(df.describe())
