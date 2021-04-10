@@ -33,7 +33,7 @@ pipeline {
 						dev_pull("/data/myci-apc/hackbench_battery_${i}.csv", ".")
 				}
 
-				sh './tools/plot.py ${NODE}_hackbench > summary.txt'
+				sh './tools/plot_script.py ${NODE}_hackbench > summary.txt'
 			}
 		}
 		stage('Archive') {

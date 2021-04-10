@@ -23,7 +23,7 @@ pipeline {
 					kill -9 \\$pid
 				''')
 				dev_pull("/data/myci-apc/battery_monitor.csv", ".")
-				sh './tools/plot.py ${NODE}_idle > summary.txt'
+				sh './tools/plot_script.py ${NODE}_idle > summary.txt'
 			}
 		}
 		stage('Archive') {
