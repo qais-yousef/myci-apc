@@ -1,12 +1,41 @@
 <?xml version='1.1' encoding='UTF-8'?>
 <com.cloudbees.hudson.plugins.folder.Folder plugin="cloudbees-folder@6.15">
+  <actions/>
   <description>Experiments to try to find a good way to measure power consumption on Android.</description>
   <displayName>Android-Power-Consumption</displayName>
   <properties>
-    <org.jenkinsci.plugins.docker.workflow.declarative.FolderConfig plugin="docker-workflow@1.25">
-      <dockerLabel></dockerLabel>
-      <registry plugin="docker-commons@1.17"/>
-    </org.jenkinsci.plugins.docker.workflow.declarative.FolderConfig>
+    <org.jenkinsci.plugins.workflow.libs.FolderLibraries plugin="workflow-cps-global-lib@2.18">
+      <libraries>
+        <org.jenkinsci.plugins.workflow.libs.LibraryConfiguration>
+          <name>myci-apc-utils</name>
+          <retriever class="org.jenkinsci.plugins.workflow.libs.SCMSourceRetriever">
+            <scm class="org.jenkinsci.plugins.github_branch_source.GitHubSCMSource" plugin="github-branch-source@2.10.2">
+              <id>bfd28ad7-a75b-4736-a0e3-0f1351e1bbb5</id>
+              <apiUri>https://api.github.com</apiUri>
+              <repoOwner>qais-yousef</repoOwner>
+              <repository>myci-apc</repository>
+              <repositoryUrl>https://github.com/qais-yousef/myci-apc</repositoryUrl>
+              <traits>
+                <org.jenkinsci.plugins.github__branch__source.BranchDiscoveryTrait>
+                  <strategyId>1</strategyId>
+                </org.jenkinsci.plugins.github__branch__source.BranchDiscoveryTrait>
+                <org.jenkinsci.plugins.github__branch__source.OriginPullRequestDiscoveryTrait>
+                  <strategyId>1</strategyId>
+                </org.jenkinsci.plugins.github__branch__source.OriginPullRequestDiscoveryTrait>
+                <org.jenkinsci.plugins.github__branch__source.ForkPullRequestDiscoveryTrait>
+                  <strategyId>1</strategyId>
+                  <trust class="org.jenkinsci.plugins.github_branch_source.ForkPullRequestDiscoveryTrait$TrustPermission"/>
+                </org.jenkinsci.plugins.github__branch__source.ForkPullRequestDiscoveryTrait>
+              </traits>
+            </scm>
+          </retriever>
+          <defaultVersion>main</defaultVersion>
+          <implicit>true</implicit>
+          <allowVersionOverride>true</allowVersionOverride>
+          <includeInChangesets>true</includeInChangesets>
+        </org.jenkinsci.plugins.workflow.libs.LibraryConfiguration>
+      </libraries>
+    </org.jenkinsci.plugins.workflow.libs.FolderLibraries>
   </properties>
   <folderViews class="com.cloudbees.hudson.plugins.folder.views.DefaultFolderViewHolder">
     <views>
