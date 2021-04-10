@@ -1,0 +1,57 @@
+pipeline {
+	agent { label params.NODE }
+
+	stages {
+		stage('Connect') {
+			steps {
+				sh """
+				adb connect ${env.IPADDRESS}:${env.PORT}
+				adb shell 'echo temp > /sys/power/wake_lock'
+				"""
+			}
+		}
+		stage('Copy Tools') {
+			steps {
+				copy_tools()
+			}
+		}
+		stage('Hackbench') {
+			steps {
+				sh '''
+				adb shell """
+				cd /data/myci-apc/
+				for i in \\$(seq ${ITERATIONS})
+				do
+					./battery_stats.sh hackbench_battery_\\$i.csv &
+					pid=\\$!
+					hackbench -l ${LOOPS}
+					kill -9 \\$pid
+					sleep ${DELAY}
+				done
+				"""
+				for i in $(seq ${ITERATIONS})
+				do
+					adb pull /data/myci-apc/hackbench_battery_$i.csv .
+				done
+				./plot.py ${NODE}_hackbench > summary.txt
+				'''
+			}
+		}
+		stage('Archive') {
+			steps {
+				archiveArtifacts artifacts: '*.csv', followSymlinks: false
+				archiveArtifacts artifacts: '*.png', followSymlinks: false
+				archiveArtifacts artifacts: 'summary.txt', followSymlinks: false
+			}
+		}
+	}
+	post {
+		always {
+			cleanWs()
+			sh '''
+			adb shell "echo temp > /sys/power/wake_unlock"
+			adb shell "rm -rf /data/myci-apc/"
+			'''
+		}
+	}
+}
