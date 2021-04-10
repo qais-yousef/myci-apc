@@ -31,7 +31,7 @@ pipeline {
 				do
 					adb -s ${IPADDRESS}:${PORT} pull /data/myci-apc/hackbench_battery_$i.csv .
 				done
-				./plot.py ${NODE}_hackbench > summary.txt
+				./tools/plot.py ${NODE}_hackbench > summary.txt
 				'''
 			}
 		}
