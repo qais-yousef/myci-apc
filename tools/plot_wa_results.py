@@ -17,4 +17,4 @@ for metric in metrics:
     print(df_metric.value.describe(percentiles=[0.9, 0.95, 0.99]))
 
 plt.legend(bbox_to_anchor=(1.05, 1), loc="upper left")
-plt.savefig("{}_{}.png".format(target, workload), bbox_inches="tight")
+plt.savefig("{}_{}_results.png".format(target, workload), bbox_inches="tight")

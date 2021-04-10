@@ -4,7 +4,8 @@ import matplotlib.pyplot as plt
 import glob
 import sys
 
-workload = sys.argv[1]
+target = sys.argv[1]
+workload = sys.argv[2]
 
 files = glob.glob("wa_output/*{}*/*.csv".format(workload))
 
@@ -23,6 +24,6 @@ df.battery_percent.plot(label="%", legend=True)
 df.battery_voltage.plot(label="v", legend=True)
 df.battery_power.plot(label="p", legend=True)
 
-plt.savefig("{}.png".format(workload))
+plt.savefig("{}_{}_power.png".format(target, workload))
 
 print(df.describe())
