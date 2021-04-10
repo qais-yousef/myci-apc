@@ -15,24 +15,19 @@ pipeline {
 		}
 		stage('Hackbench') {
 			steps {
-				sh '''
-				adb -s ${IPADDRESS}:${PORT} shell """
-				cd /data/myci-apc/
-				for i in \\$(seq ${ITERATIONS})
-				do
-					./battery_stats.sh hackbench_battery_\\$i.csv &
-					pid=\\$!
-					hackbench -l ${LOOPS}
-					kill -9 \\$pid
-					sleep ${DELAY}
-				done
-				"""
-				for i in $(seq ${ITERATIONS})
-				do
-					adb -s ${IPADDRESS}:${PORT} pull /data/myci-apc/hackbench_battery_$i.csv .
-				done
-				./tools/plot.py ${NODE}_hackbench > summary.txt
-				'''
+				dev_shell('''
+					cd /data/myci-apc/
+					for i in \\$(seq ${ITERATIONS})
+					do
+						./battery_stats.sh hackbench_battery_\\$i.csv &
+						pid=\\$!
+						hackbench -l ${LOOPS}
+						kill -9 \\$pid
+						sleep ${DELAY}
+					done
+				''')
+				dev_pull("/data/myci-apc/hackbench_battery_*.csv", ".")
+				sh './tools/plot.py ${NODE}_hackbench > summary.txt'
 			}
 		}
 		stage('Archive') {
