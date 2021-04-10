@@ -15,17 +15,15 @@ pipeline {
 		}
 		stage('Monitor Battery') {
 			steps {
-				sh '''
-				adb -s ${IPADDRESS}:${PORT} shell """
+				dev_shell("""
 					cd /data/myci-apc/
 					./battery_stats.sh battery_monitor.csv &
 					pid=\\$!
 					sleep ${TIME}
 					kill -9 \\$pid
-				"""
-				adb -s ${IPADDRESS}:${PORT} pull /data/myci-apc/battery_monitor.csv .
-				./tools/plot.py ${NODE}_idle > summary.txt
-				'''
+				""")
+				dev_pull("/data/myci-apc/battery_monitor.csv", ".")
+				sh './tools/plot.py ${NODE}_idle > summary.txt'
 			}
 		}
 		stage('Archive') {
